@@ -1,5 +1,12 @@
 #include "presentimpedancesplot.h"
-#include <QtGui>
+
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QGroupBox>
+#include <QLabel>
+#include <QPushButton>
+#include <QFontMetrics>
+#include <QPainter>
 
 PresentImpedancesPlot::PresentImpedancesPlot(QWidget *parent) :
     QWidget(parent)

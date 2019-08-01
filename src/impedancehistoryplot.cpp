@@ -1,5 +1,11 @@
 #include "impedancehistoryplot.h"
-#include <QtGui>
+
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QGroupBox>
+#include <QLabel>
+#include <QPushButton>
+#include <QPainter>
 
 ImpedanceHistoryPlot::ImpedanceHistoryPlot(QWidget *parent) :
     QWidget(parent)
