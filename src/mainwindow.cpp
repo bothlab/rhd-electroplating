@@ -912,10 +912,15 @@ void MainWindow::connectToBoard()
             return;
         }
 
-        //Load Rhythm FPGA configuration bitfile (provided by Intan Technologies).
-        string bitfilename = QString(QCoreApplication::applicationDirPath() + "/main.bit").toStdString();
+        // Find & load Rhythm FPGA configuration bitfile (provided by Intan Technologies).
+        auto bitfilenameQStr = QStringLiteral("/usr/local/share/intan/rhd2000electroplating/main.bit");
+        if (!QFileInfo(bitfilenameQStr).isFile()) {
+            bitfilenameQStr = QStringLiteral("/usr/share/intan/rhd2000electroplating/main.bit");
+            if (!QFileInfo(bitfilenameQStr).isFile())
+                bitfilenameQStr = QString(QCoreApplication::applicationDirPath() + "/main.bit");
+        }
 
-        if (!boardControl->evalBoard->uploadFpgaBitfile(bitfilename)) {
+        if (!boardControl->evalBoard->uploadFpgaBitfile(bitfilenameQStr.toStdString())) {
             QMessageBox::critical(this, tr("Hardware Configuration File Upload Error"),
                                   tr("Cannot upload configuration file to Intan Electroplating Board. Make sure file main.bit "
                                      "is in the same directory as the executable file."));
