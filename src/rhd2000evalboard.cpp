@@ -80,7 +80,28 @@ bool Rhd2000EvalBoard::OpalKellyLibraryHandle::addRef(okFP_dll_pchar dllPath) {
             dllLocation = _T("okFrontPanel.dll");
         }
 #endif
-        if (okFrontPanelDLL_LoadLib(dllLocation) == false) {
+
+        okFP_dll_pchar okFrontPanelLibPath = dllPath;
+        if (dllPath == nullptr || dllPath[0] == '\0') {
+            // find FrontPanel library (on Linux system paths)
+            auto okFrontPanelLibTmp = QStringLiteral("/usr/local/lib/intan/libokFrontPanel.so");
+            if (!QFileInfo(okFrontPanelLibTmp).isFile()) {
+                    okFrontPanelLibTmp = QStringLiteral("/usr/lib/intan/libokFrontPanel.so");
+                    if (!QFileInfo(okFrontPanelLibTmp).isFile())
+                    okFrontPanelLibTmp = QString();
+            }
+
+            okFrontPanelLibPath = NULL;
+            if (!okFrontPanelLibTmp.isEmpty()) {
+#if defined(_WIN32) && defined(_UNICODE)
+                    okFrontPanelLibPath = okFrontPanelLibTmp.toStdWString().c_str();
+#else
+                    okFrontPanelLibPath = qPrintable(okFrontPanelLibTmp);
+#endif
+            }
+        }
+
+        if (okFrontPanelDLL_LoadLib(okFrontPanelLibPath) == false) {
             cerr << "FrontPanel DLL could not be loaded.  " <<
                 "Make sure this DLL is in the application start directory." << endl;
             return false;
@@ -207,29 +228,17 @@ bool Rhd2000EvalBoard::discoverSerialNumbers(vector<string>& serialNumbers) {
     return true;
 }
 
-/**
- \brief Finds an Opal Kelly XEM6010 - LX45 board attached to a USB port and opens it.
-
- \return 
-	\li 1 if successful.  
-	\li -1 if Opal Kelly FrontPanel DLL cannot be loaded.
-	\li -2 if an XEM6010 board is not found.
-*/
-int Rhd2000EvalBoard::open() {
-    return openEx("");
-}
-
 /** \brief Finds an Opal Kelly XEM6010 - LX45 board attached to a USB port and opens it.
 
  @param[in] requestedSerialNumber   Serial number of the board to attach to.  If you pass "", the
                                     function will pick the first available board.
 
  \return 
-	\li 1 if successful.  
+	\li 1 if successful.
 	\li -1 if Opal Kelly FrontPanel DLL cannot be loaded.
 	\li -2 if an XEM6010 board is not found.
 */
-int Rhd2000EvalBoard::openEx(const string& requestedSerialNumber) {
+int Rhd2000EvalBoard::open(const string& requestedSerialNumber) {
     LOG(true) << "---- Intan Technologies ---- Rhythm RHD2000 Controller v1.0 ----" << endl << endl;
     if (!loadLibrary(nullptr)) {
         return -1;
@@ -414,11 +423,11 @@ void Rhd2000EvalBoard::initialize()
 }
 
 /**
-	\brief Sets the per-channel sampling rate of the RHD2000 chips connected to the Rhythm FPGA. 
+	\brief Sets the per-channel sampling rate of the RHD2000 chips connected to the Rhythm FPGA.
 
 	@param[in] newSampleRate	Requested sampling rate, specified via the AmplifierSampleRate enumeration.
 
-	@return false if an unsupported sampling rate is requested. 
+	@return false if an unsupported sampling rate is requested.
 */
 bool Rhd2000EvalBoard::setSampleRate(AmplifierSampleRate newSampleRate)
 {

@@ -76,8 +76,7 @@ public:
     //@{
     virtual bool loadLibrary(okFP_dll_pchar dllPath);
     virtual bool discoverSerialNumbers(std::vector<std::string>& serialNumbers);
-    virtual int open();
-    virtual int openEx(const std::string& requestedSerialNumber);
+    virtual int open(const std::string& requestedSerialNumber = "");
     virtual bool uploadFpgaBitfile(const std::string& filename);
     virtual void initialize();
     virtual bool isOpen() const;
