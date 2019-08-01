@@ -124,6 +124,14 @@ GlobalConfigurationWindow::GlobalConfigurationWindow(GlobalParameters *parameter
         noTargetZ->setChecked(true);
     }
 
+    if (parameters->channelCount < 128) {
+        channels64127Present->setVisible(false);
+        if (parameters->channelCount <= 64) {
+            channels063Present->setVisible(false);
+            electrodesGroupBox->setVisible(false);
+        }
+    }
+
     setLayout(mainLayout);
     exec();
 }

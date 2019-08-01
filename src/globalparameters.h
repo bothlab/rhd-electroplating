@@ -3,6 +3,7 @@
 
 /* Structure that holds the max number of pulses, various delays, whether or not channels 0-63 or 64-127 are present, and whether or not to use the target impedance */
 struct GlobalParameters {
+    int channelCount;
     int maxPulses;
     float delayMeasurementPulse;
     float delayPulseMeasurement;

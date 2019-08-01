@@ -10,10 +10,14 @@
 using namespace std;
 
 /* Constructor */
-DataProcessor::DataProcessor()
+DataProcessor::DataProcessor(int electrodeN)
 {
-    //Allocate memory for 128 'OneElectrode' objects
-    for (int i = 0; i < 128; i++) {
+    Q_ASSERT(electrodeN > 0);
+    Q_ASSERT(electrodeN <= 128);
+
+    electrodeCount = electrodeN;
+    //Allocate memory for 'OneElectrode' objects
+    for (auto i = 0; i < electrodeCount; i++) {
         Electrodes[i] = new OneElectrode;
     }
 }
@@ -21,8 +25,8 @@ DataProcessor::DataProcessor()
 /* Destructor */
 DataProcessor::~DataProcessor()
 {
-    //Free memory for 128 'OneElectrode' objects
-    for (int i = 0; i < 128; i++) {
+    //Free memory for 'OneElectrode' objects
+    for (auto i = 0; i < electrodeCount; i++) {
         delete Electrodes[i];
     }
 }
@@ -30,19 +34,19 @@ DataProcessor::~DataProcessor()
 /* Public - Gets the most recently measured impedances, returning both indices of electrodes whose impedances have been measured & impedances as complex numbers */
 QVector<ElectrodeImpedance> DataProcessor::get_impedances()
 {
-    std::complex<double> impedances_tmp[128];
-    int valid[128];
+    std::vector<std::complex<double>> impedances_tmp(static_cast<size_t>(electrodeCount));
+    std::vector<int> valid(static_cast<size_t>(electrodeCount));
     QVector<ElectrodeImpedance> impedances;
 
     //Initialize impedances' real and imaginary components to 0, and valid to 0
-    for (int i = 0; i < 128; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(electrodeCount); i++) {
         impedances_tmp[i].real(0);
         impedances_tmp[i].imag(0);
         valid[i] = 0;
     }
 
     //If this electrode has a non-empty impedance history, set it to valid, and get the most recently measured impedance on this electrode
-    for (int i = 0; i < 128; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(electrodeCount); i++) {
         if (!Electrodes[i]->ImpedanceHistory.isEmpty()) {
             valid[i] = 1;
             impedances_tmp[i] = Electrodes[i]->get_current_impedance();
@@ -50,10 +54,10 @@ QVector<ElectrodeImpedance> DataProcessor::get_impedances()
     }
 
     //For all the valid electrodes, append the impedance and index to 'impedances' QVector
-    for (int i = 0; i < 128; i++) {
-        if (valid[i] == 1) {
+    for (auto i = 0; i < electrodeCount; i++) {
+        if (valid[static_cast<size_t>(i)] == 1) {
             ElectrodeImpedance thisElectrode;
-            thisElectrode.impedance = impedances_tmp[i];
+            thisElectrode.impedance = impedances_tmp[static_cast<size_t>(i)];
             thisElectrode.index = i;
             impedances.append(thisElectrode);
         }
@@ -67,7 +71,7 @@ void DataProcessor::save_impedances(QString filename)
     //Save the current impedances to 'filename'.
     QFile impedancesFile(filename);
     if (!impedancesFile.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(0, "Cannot Save Impedances File",
+        QMessageBox::critical(nullptr, "Cannot Save Impedances File",
                               "Cannot open new csv file for writing.");
         return;
     }
@@ -84,7 +88,7 @@ void DataProcessor::save_impedances(QString filename)
     outStream.writeRawData(label.constData(), label.length());
 
     //For each electrode with a non-empty impedance history, write data
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < electrodeCount; i++) {
         if (!Electrodes[i]->ImpedanceHistory.empty()) {
             std::complex<double> impedance = Electrodes[i]->get_current_impedance();
             QByteArray data;

@@ -137,14 +137,22 @@ MainWindow::MainWindow(QWidget *parent)
     bool first64 = boardControl->dataStreams.physicalDataStreams[0].getNumChannels() == 64;
     bool second64 = boardControl->dataStreams.physicalDataStreams[1].getNumChannels() == 64;
 
-    if (!(first64 && second64)) {
-        QMessageBox::information(this, tr("No 128-channel Headstage Detected"),
-                                 tr("No 128-channel headstage is connected to the Intan Electroplating Board."
+    if (!first64) {
+        QMessageBox::information(this, tr("No 64-channel or 128-channel Headstage Detected"),
+                                 tr("No 64-channel or 128-channel headstage is connected to the Intan Electroplating Board."
                                     "<p>Connnect headstage module, then restart the application."));
         delete signalProcessor;
         delete ebc;
         delete boardControl;
         exit(EXIT_FAILURE);
+    }
+
+    amplifierChannelCount = 64;
+    if (first64 && second64) {
+        amplifierChannelCount = 128;
+        qDebug().noquote() << "128-channel headstage is connected.";
+    } else {
+        qDebug().noquote() << "64-channel headstage is connected.";
     }
 
     /* Set up First Column of GUI */
@@ -211,6 +219,14 @@ MainWindow::MainWindow(QWidget *parent)
     automaticPlatingGroupBoxLayout->addWidget(runGroupBox);
     automaticPlatingGroupBoxLayout->addWidget(automaticRunButton);
     automaticPlatingGroupBox->setLayout(automaticPlatingGroupBoxLayout);
+
+    // don't show option to plate more than 64 channels if we don't have a 128-channel
+    // amplifier board connected.
+    if (amplifierChannelCount < 128) {
+        run063Button->setVisible(false);
+        if (amplifierChannelCount <= 64)
+            run64127Button->setVisible(false);
+    }
 
     //Set up "Plot Settings" Group Box
     QGroupBox *plotSettingsGroupBox = new QGroupBox(tr("Plot Settings"));
@@ -336,7 +352,7 @@ MainWindow::MainWindow(QWidget *parent)
     initializeSettings();
 
     //Create data processor
-    dataProcessor = new DataProcessor();
+    dataProcessor = new DataProcessor(amplifierChannelCount);
 
     //Connect final signals & slots
     connect(manualConfigureButton, SIGNAL(clicked()), this, SLOT(manualConfigureSlot()));
@@ -680,8 +696,8 @@ void MainWindow::automaticRunSlot()
     int channelStart, channelEnd;
     if (runAllButton->isChecked()) {
         channelStart = 0;
-        channelEnd = 128;
-        automaticProgress->setMaximum(128);
+        channelEnd = amplifierChannelCount;
+        automaticProgress->setMaximum(amplifierChannelCount);
     }
     else if (runSelectedChannelButton->isChecked()) {
         channelStart = selectedChannelSpinBox->value();
@@ -725,7 +741,7 @@ void MainWindow::automaticRunSlot()
 }
 
 
-/* Read all 128 channels' impedances sequentially */
+/* Read all channels' impedances sequentially */
 void MainWindow::readAllImpedancesSlot()
 {
     //Don't want the user clicking on other buttons while we read
@@ -736,11 +752,11 @@ void MainWindow::readAllImpedancesSlot()
     readAllProgress->setWindowTitle(" ");
     readAllProgress->setMinimumDuration(0);
     readAllProgress->setModal(true);
-    readAllProgress->setMaximum(128);
+    readAllProgress->setMaximum(amplifierChannelCount);
     readAllProgress->show();
 
-    //Read all 128 channels
-    for (int i = 0; i < 128; i++) {
+    //Read all channels
+    for (int i = 0; i < amplifierChannelCount; i++) {
 
         QApplication::processEvents();
 
@@ -939,11 +955,7 @@ void MainWindow::connectToBoard()
             return;
         }
 
-        //Make sure a 128-channel headstage is connected
-        bool headstage = false;
-        headstage = signalSources->signalPort[0].enabled;
-
-        //Reset LEDs
+        // Reset LEDs
         int array[] = {0, 0, 0, 0, 0, 0, 0, 0};
         boardControl->evalBoard->setLedDisplay(array);
     }
@@ -997,13 +1009,14 @@ void MainWindow::initializeParams()
     automaticParameters->actualValue = 0;
     automaticParameters->duration = 1;
 
+    globalParameters->channelCount = amplifierChannelCount;
     globalParameters->maxPulses = 10;
     globalParameters->delayMeasurementPulse = 0;
     globalParameters->delayPulseMeasurement = 0;
     globalParameters->delayChangeRef = 0.1f;
     globalParameters->continuousZDelay = 2;
-    globalParameters->channels063Present = true;
-    globalParameters->channels64127Present = true;
+    globalParameters->channels063Present = globalParameters->channelCount >= 64;
+    globalParameters->channels64127Present = globalParameters->channelCount >= 128;
     globalParameters->useTargetZ = true;
 }
 

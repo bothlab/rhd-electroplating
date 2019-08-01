@@ -48,7 +48,7 @@ private slots:
     void manualApplySlot(); //Read impedance, apply a manual pulse, and read impedance again for the currently selected channel
     void automaticConfigureSlot(); //Open a new Configuration Window, and pass it automaticParameters to save (if OK is clicked) FINISHED
     void automaticRunSlot(); //Apply automatic electroplating pulses to all desired channels, reading and plating in a loop for each channel
-    void readAllImpedancesSlot(); //Read all 128 channels' impedances sequentially
+    void readAllImpedancesSlot(); //Read all channels' impedances sequentially
     void continuousZScanSlot(); //Read the currently selected channel's impedance continuously until user clicks 'Cancel'
     void targetImpedanceChanged(QString impedance); //If the user has changed the target impedance, redraw the plots
     void selectedChannelChanged(); //If the user has changed the select channel, update the GUI and impedance plots to reflect the new channel
@@ -87,6 +87,8 @@ private:
     bool timerdone;
     bool sleeptimerdone;
     SignalSources *signalSources;
+
+    int amplifierChannelCount;
 
     /* Signal Processor variables */
     SignalProcessor *signalProcessor;

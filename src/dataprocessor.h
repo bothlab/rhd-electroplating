@@ -11,7 +11,7 @@ struct Settings;
 class DataProcessor
 {
 public:
-    DataProcessor(); //Constructor
+    DataProcessor(int electrodeN); //Constructor
     ~DataProcessor(); //Destructor
     QVector<ElectrodeImpedance> get_impedances(); //Gets the most recently measured impedances, returning both indices of electrodes whose impedances have been measured & impedances as complex numbers
     void save_impedances(QString filename); //Save the current impedances to 'filename'
@@ -21,7 +21,8 @@ public:
     OneElectrode *Electrodes[128];
 
 private:
-    int Selected; //Selected channel (0-127)
+    int electrodeCount; // Number of electrodes
+    int Selected; //Selected channel (0-electrodeCount)
     bool DisplayMagnitudes; //True for magnitudes, false for phases
 };
 
