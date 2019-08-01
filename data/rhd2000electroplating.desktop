@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=RHD2000 Electroplating
+Comment=Intan RHD2000 Electroplating
+Exec=rhd2000electroplating
+Icon=rhd2000electroplating
+Terminal=false
+Categories=Science;Biology;Electricity;
