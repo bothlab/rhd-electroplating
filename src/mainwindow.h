@@ -32,8 +32,11 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0); //Constructor
+    MainWindow(QWidget *parent = nullptr); //Constructor
     ~MainWindow(); //Destructor
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void impedanceDisplayChanged(); //If the user has changed impedance display (phase or magnitude), redraw the plots

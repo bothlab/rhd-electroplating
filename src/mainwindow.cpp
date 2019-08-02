@@ -408,6 +408,10 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(mainWidget);
     adjustSize();
 
+    // restore main window geometry
+    resize(1080, 800); // default geometry
+    QSettings settings("Intan", "Electroplating");
+    restoreGeometry(settings.value("main/geometry").toByteArray());
 }
 
 
@@ -425,6 +429,15 @@ MainWindow::~MainWindow()
     delete signalSources;
     delete boardControl;
     delete ebc;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // save window geometry to restore it later
+    QSettings settings("Intan", "Electroplating");
+    settings.setValue("main/geometry", saveGeometry());
+
+    event->accept();
 }
 
 
