@@ -1,3 +1,4 @@
+
 #include "mainwindow.h"
 #include "impedancehistoryplot.h"
 #include "presentimpedancesplot.h"
@@ -73,9 +74,6 @@ int QtProgressWrapper::maximum() const {
 bool QtProgressWrapper::wasCanceled() const {
     return dialog.wasCanceled();
 }
-
-
-
 
 /* Constructor */
 MainWindow::MainWindow(QWidget *parent)
@@ -238,11 +236,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     //Add group boxes to First Column
     firstColumn->addWidget(selectedChannelGroupBox);
-    firstColumn->addStretch();
     firstColumn->addWidget(manualPulseGroupBox);
-    firstColumn->addStretch();
     firstColumn->addWidget(automaticPlatingGroupBox);
-    firstColumn->addStretch();
     firstColumn->addWidget(plotSettingsGroupBox);
 
     //Set default state to "Run All"
@@ -273,6 +268,7 @@ MainWindow::MainWindow(QWidget *parent)
     continuousZScanButton = new QPushButton(tr("Continuous Z Scan"));
     firstRow->addWidget(readAllImpedancesButton);
     firstRow->addWidget(continuousZScanButton);
+    firstRow->setContentsMargins(0, 0, 0, 0);
     secondColumn->addLayout(firstRow);
 
     //Set up present impedance widget
@@ -296,15 +292,53 @@ MainWindow::MainWindow(QWidget *parent)
     Zhistory->setRange(false);
     Zhistory->redrawPlot();
 
-    //Add impedance plots to Second Column
-    secondColumn->addWidget(currentZ);
-    secondColumn->addWidget(Zhistory);
+    // Center impedance plots in Second Column
+    auto graphsLayout = new QVBoxLayout(this);
+    graphsLayout->addStretch();
+    graphsLayout->addWidget(currentZ);
+    graphsLayout->addWidget(Zhistory);
+    graphsLayout->addStretch();
+    graphsLayout->setContentsMargins(0, 0, 0, 0);
+    graphsLayout->setSpacing(0);
 
-    //Add two columns to window's main layout
-    QHBoxLayout *mainLayout = new QHBoxLayout;
-    mainLayout->addLayout(firstColumn);
-    mainLayout->addLayout(secondColumn);
-    QWidget *mainWidget = new QWidget;
+    auto graphScrollArea = new QScrollArea(this);
+    auto graphsWidget = new QWidget(this);
+    graphsWidget->setLayout(graphsLayout);
+    graphScrollArea->setWidget(graphsWidget);
+    graphScrollArea->setWidgetResizable(true);
+    graphScrollArea->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+    graphScrollArea->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
+    secondColumn->addWidget(graphScrollArea, 10);
+
+    // Add two columns to the main window
+    auto firstColumnWidget = new QWidget(this);
+    firstColumnWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    firstColumnWidget->setLayout(firstColumn);
+    firstColumn->setContentsMargins(4, 4, 2, 4);
+    firstColumn->setSpacing(4);
+    firstColumn->addStretch();
+
+    auto secondColumnWidget = new QWidget(this);
+    secondColumnWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    secondColumnWidget->setLayout(secondColumn);
+    secondColumn->setContentsMargins(2, 4, 4, 4);
+    secondColumn->setSpacing(4);
+
+    auto mainLayout = new QHBoxLayout;
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+
+    auto firstColumnScroll = new QScrollArea(this);
+    firstColumnScroll->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+    firstColumnScroll->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
+    firstColumnScroll->setWidget(firstColumnWidget);
+    firstColumnScroll->setWidgetResizable(true);
+    firstColumnScroll->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
+
+    mainLayout->addWidget(firstColumnScroll);
+    mainLayout->addWidget(secondColumnWidget);
+
+    QWidget *mainWidget = new QWidget(this);
     mainWidget->setLayout(mainLayout);
 
     /* Set up menus and add actions to them */
@@ -370,33 +404,10 @@ MainWindow::MainWindow(QWidget *parent)
     targetImpedance->setText("100");
     targetImpedanceLine = targetImpedance->text().toDouble() * 1000;
 
-    setCentralWidget(mainWidget);
-
-    adjustSize();
-    QRect screenRect = QApplication::desktop()->screenGeometry();
     //Set this main widget to main window
     setCentralWidget(mainWidget);
     adjustSize();
 
-    //If the screen height has less than 100 pixels to spare at the current size of mainWidget, or
-    //if the screen width has less than 100 pixels to spare, put mainWidget inside a QScrollArea
-
-    if ((screenRect.height() < mainWidget->height() + 100) ||
-            (screenRect.width() < mainWidget->width() + 100)) {
-        QScrollArea *scrollArea = new QScrollArea;
-        scrollArea->setWidget(mainWidget);
-        setCentralWidget(scrollArea);
-
-        if (screenRect.height() < mainWidget->height() + 100)
-            setMinimumHeight(screenRect.height() - 100);
-        else
-            setMinimumHeight(mainWidget->height() + 50);
-
-        if (screenRect.width() < mainWidget->width() + 100)
-            setMinimumWidth(screenRect.width() - 100);
-        else
-            setMinimumWidth(mainWidget->width() + 50);
-    }
 }
 
 

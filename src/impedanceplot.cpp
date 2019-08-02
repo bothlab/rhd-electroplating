@@ -27,7 +27,7 @@ ImpedancePlot::ImpedancePlot(int maxChannelN, QWidget *parent) :
     maxChannelCount = maxChannelN;
 
     //Allocate memory for mainPixmap
-    mainPixmap = new QPixmap(mainWidth, mainHeight);
+    mainPixmap = new QPixmap(mainWidth, mainHeight + 40);
 
     //Draw the plot, with all the default values
     redrawPlot();
@@ -165,7 +165,7 @@ void ImpedancePlot::mousePressEvent(QMouseEvent *event)
 /* Reimplemented - Set the minimum size hint to the size of the main pixmap */
 QSize ImpedancePlot::minimumSizeHint() const
 {
-    return QSize(mainWidth, mainHeight);
+    return QSize(mainWidth, mainHeight + 4);
 }
 
 
