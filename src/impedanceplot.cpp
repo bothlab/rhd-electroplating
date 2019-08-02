@@ -6,7 +6,7 @@
 #include <QtWidgets>
 #endif
 
-ImpedancePlot::ImpedancePlot(QWidget *parent) :
+ImpedancePlot::ImpedancePlot(int maxChannelN, QWidget *parent) :
     QWidget(parent)
 {
     //Store the background color from the parent widget (to be used later to fill the main pixmap)
@@ -24,6 +24,7 @@ ImpedancePlot::ImpedancePlot(QWidget *parent) :
     xautoscale = false;
     yScaleState = Logarithmic;
     grid = false;
+    maxChannelCount = maxChannelN;
 
     //Allocate memory for mainPixmap
     mainPixmap = new QPixmap(mainWidth, mainHeight);
@@ -451,7 +452,7 @@ void ImpedancePlot::drawText()
 }
 
 
-/* Private - Draw ticks and label them on the x axis, either calculating them if autoscaled, or drawing a 0-127 scale if not */
+/* Private - Draw ticks and label them on the x axis, either calculating them if autoscaled, or drawing a 0-maxChanN scale if not */
 void ImpedancePlot::drawXAxis()
 {
     QPainter painter(mainPixmap);
@@ -479,19 +480,20 @@ void ImpedancePlot::drawXAxis()
         }
     }
 
-    //No autoscale - just draw hand-made x axis from 0 to 127 (suitable for channels as x-axis, i.e. currentZ graph)
+    //No autoscale - just draw hand-made x axis from 0 to maxChanN (suitable for channels as x-axis, i.e. currentZ graph)
     else {
+        const auto maxChanN = maxChannelCount - 1;
         //Draw the 6 tick marks that mark channels 20, 40, 60, 80, 100, and 120
-        for (double i = 1; i < 7; i++) {
+        for (double i = 1; i < (maxChanN / 18); i++) {
             //Top ticks
-            painter.drawLine(graphOriginX + ((i*20)/127)*graphWidth, graphOriginY, graphOriginX + ((i*20)/127)*graphWidth, graphOriginY + xTickRatio*graphHeight);
+            painter.drawLine(graphOriginX + ((i*20)/maxChanN)*graphWidth, graphOriginY, graphOriginX + ((i*20)/maxChanN)*graphWidth, graphOriginY + xTickRatio*graphHeight);
             //Bottom ticks
-            painter.drawLine(graphOriginX + ((i*20)/127)*graphWidth, graphOriginY + graphHeight, graphOriginX + ((i*20)/127)*graphWidth, graphOriginY + (1 - xTickRatio)*graphHeight);
+            painter.drawLine(graphOriginX + ((i*20)/maxChanN)*graphWidth, graphOriginY + graphHeight, graphOriginX + ((i*20)/maxChanN)*graphWidth, graphOriginY + (1 - xTickRatio)*graphHeight);
         }
 
         //Label ticks - all multiples of 20 up to 120
-        for (double i = 0; i < 7; i++) {
-            painter.drawText(QPoint(graphOriginX + (((i*20)/127)*graphWidth) - (0.5 * metrics.width(QString::number(i * 20))), xUnitsRowPosition), QString::number(i * 20));
+        for (double i = 0; i < (maxChanN / 18); i++) {
+            painter.drawText(QPoint(graphOriginX + (((i*20)/maxChanN)*graphWidth) - (0.5 * metrics.width(QString::number(i * 20))), xUnitsRowPosition), QString::number(i * 20));
         }
     }
     painter.end();

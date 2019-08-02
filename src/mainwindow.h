@@ -60,7 +60,7 @@ private:
     void connectToBoard(); //Connect to Opal Kelly XEM6010 board and upload .bit file
     void scanPort(); //Scan SPI Port to identify all connected RHD2000 amplifier chips
     void changeSampleRate(Rhd2000EvalBoard::AmplifierSampleRate sampleRate); //Upload and execute board commands to change sample rate
-    void initializeParams(); //Initialize manual, automatic, and global parameters with default values
+    void initializeParams(int channelCount); //Initialize manual, automatic, and global parameters with default values
     void initializeSettings(); //Initialize settings with default values
     void redrawImpedance(); //Update and redraw impedance plots, as well as GUI impedance display widget
     void setImpedanceTitle(); //Update impedance plot "currentZ" title
@@ -87,8 +87,6 @@ private:
     bool timerdone;
     bool sleeptimerdone;
     SignalSources *signalSources;
-
-    int amplifierChannelCount;
 
     /* Signal Processor variables */
     SignalProcessor *signalProcessor;

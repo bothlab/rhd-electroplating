@@ -71,7 +71,7 @@ class ImpedancePlot : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ImpedancePlot(QWidget *parent); //Constructor
+    explicit ImpedancePlot(int maxChannelN, QWidget *parent); //Constructor
     void redrawPlot(); //Redraw the entire plot, including labels, points, lines, and tick marks
     void setDomain(bool autoscale, double max); //Set the domain of the graph. Minimum is assumed to be zero. If autoscale is true, determine the tick marks intelligently
     void setRange(bool linear, int min = 4, int max = 7); //Set the range of the graph. If linear, range is assumed to be +/- 180 degrees. If not, it is a semilog graph default range 10^4 to 10^7
@@ -84,9 +84,9 @@ public:
     QString yLabel; //Label (for units) written to the left of the y-axis
 
 private:
-    void paintEvent(QPaintEvent *event); //Reimplemented function that draws the pixmap
+    void paintEvent(QPaintEvent *event) override; //Reimplemented function that draws the pixmap
     void mousePressEvent(QMouseEvent *event) override; //Reimplemented function that gathers the position of a left mouse click, and emits the 'clickedXUnits' signal to return the x coordinate of the click in units of the graph
-    QSize minimumSizeHint() const; //Reimplemented function that sets the minimum size hint to the size of the main pixmap
+    QSize minimumSizeHint() const override; //Reimplemented function that sets the minimum size hint to the size of the main pixmap
     double getClickXPixel(QPoint point); //Return the x pixel of a click with respect to the origin of the graph. If it is outside the bounds of the graph, return -1
     int convertToXPixels(double xunits); //Convert an x coordinate from the units of the graph to pixels
     int convertToYPixels(double yunits); //Convert a y coordinate from the units of the graph to pixels
@@ -113,6 +113,7 @@ private:
     YScale yScaleState; //Store whether the y axis is on a Logarithmic or Linear scale
     QVector<PointInfo> pointsToPlot; //Vector that store all points set in public 'plotPoint()' that are then drawn in private function 'drawPoints()'
     QVector<LineInfo> linesToPlot; //Vector that stores all lines set in public 'plotLine()' that are then drawn in private function 'drawLines()'
+    int maxChannelCount;
 
 signals:
     void clickedXUnits(double); //Signal emitted that returns the x coordinate of a click, in the units of the graph. If the click was outside the graph, return -1

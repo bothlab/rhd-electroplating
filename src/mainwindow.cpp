@@ -81,8 +81,9 @@ bool QtProgressWrapper::wasCanceled() const {
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    /* Connect to and initialize board */
+    setWindowTitle(QStringLiteral("RHD2000 Electroplating"));
 
+    /* Connect to and initialize board */
     //Set up board control variables
     ebc = new ElectroplatingBoardControl();
     boardControl = new BoardControl();
@@ -147,7 +148,7 @@ MainWindow::MainWindow(QWidget *parent)
         exit(EXIT_FAILURE);
     }
 
-    amplifierChannelCount = 64;
+    auto amplifierChannelCount = 64;
     if (first64 && second64) {
         amplifierChannelCount = 128;
         qDebug().noquote() << "128-channel headstage is connected.";
@@ -161,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent)
     //Set up "Selected Channel" Group Box
     QGroupBox *selectedChannelGroupBox = new QGroupBox(tr("Selected Channel"));
     selectedChannelSpinBox = new QSpinBox();
-    selectedChannelSpinBox->setRange(0, 127);
+    selectedChannelSpinBox->setRange(0, amplifierChannelCount - 1);
     selectedChannelSpinBoxLabel = new QLabel(tr("N/A"));
     QHBoxLayout *selectedChannelGroupBoxLayout = new QHBoxLayout;
     selectedChannelGroupBoxLayout->addWidget(selectedChannelSpinBoxLabel);
@@ -275,11 +276,11 @@ MainWindow::MainWindow(QWidget *parent)
     secondColumn->addLayout(firstRow);
 
     //Set up present impedance widget
-    currentZ = new ImpedancePlot(this);
+    currentZ = new ImpedancePlot(amplifierChannelCount, this);
     currentZ->title = "Impedance Magnitudes (0 of 0 below threshold)";
     currentZ->xLabel = "Channel";
     currentZ->yLabel = "Impedance (Ohms)";
-    currentZ->setDomain(false, 127);
+    currentZ->setDomain(false, amplifierChannelCount - 1);
     currentZ->setRange(false);
     currentZ->redrawPlot();
 
@@ -287,7 +288,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(currentZ, SIGNAL(clickedXUnits(double)), this, SLOT(findClosestChannel(double)));
 
     //Set up impedance history widget
-    Zhistory = new ImpedancePlot(this);
+    Zhistory = new ImpedancePlot(amplifierChannelCount, this);
     Zhistory->title = "Impedance History (Channel 0)";
     Zhistory->xLabel = "Time (seconds)";
     Zhistory->yLabel = "Impedance (Ohms)";
@@ -345,7 +346,7 @@ MainWindow::MainWindow(QWidget *parent)
     manualParameters = new ConfigurationParameters;
     automaticParameters = new ConfigurationParameters;
     globalParameters = new GlobalParameters;
-    initializeParams();
+    initializeParams(amplifierChannelCount);
 
     //Create and initialize settings
     settings = new Settings;
@@ -696,8 +697,8 @@ void MainWindow::automaticRunSlot()
     int channelStart, channelEnd;
     if (runAllButton->isChecked()) {
         channelStart = 0;
-        channelEnd = amplifierChannelCount;
-        automaticProgress->setMaximum(amplifierChannelCount);
+        channelEnd = globalParameters->channelCount;
+        automaticProgress->setMaximum(globalParameters->channelCount);
     }
     else if (runSelectedChannelButton->isChecked()) {
         channelStart = selectedChannelSpinBox->value();
@@ -752,11 +753,11 @@ void MainWindow::readAllImpedancesSlot()
     readAllProgress->setWindowTitle(" ");
     readAllProgress->setMinimumDuration(0);
     readAllProgress->setModal(true);
-    readAllProgress->setMaximum(amplifierChannelCount);
+    readAllProgress->setMaximum(globalParameters->channelCount);
     readAllProgress->show();
 
     //Read all channels
-    for (int i = 0; i < amplifierChannelCount; i++) {
+    for (int i = 0; i < globalParameters->channelCount; i++) {
 
         QApplication::processEvents();
 
@@ -995,7 +996,7 @@ void MainWindow::changeSampleRate(Rhd2000EvalBoard::AmplifierSampleRate sampleRa
 
 
 /* Initialize manual, automatic, and global parameters with default values */
-void MainWindow::initializeParams()
+void MainWindow::initializeParams(int channelCount)
 {
     manualParameters->electroplatingMode = ConstantCurrent;
     manualParameters->sign = Negative;
@@ -1009,7 +1010,7 @@ void MainWindow::initializeParams()
     automaticParameters->actualValue = 0;
     automaticParameters->duration = 1;
 
-    globalParameters->channelCount = amplifierChannelCount;
+    globalParameters->channelCount = channelCount;
     globalParameters->maxPulses = 10;
     globalParameters->delayMeasurementPulse = 0;
     globalParameters->delayPulseMeasurement = 0;
@@ -1122,7 +1123,7 @@ void MainWindow::drawAllImpedances()
     if (magnitudeButton->isChecked()) {
         //Draw green target impedance line
         double targetImpedanceOhms = targetImpedance->text().toDouble() * 1000;
-        currentZ->plotLine(0, targetImpedanceOhms, 127 + 1, targetImpedanceOhms, Qt::green);
+        currentZ->plotLine(0, targetImpedanceOhms, globalParameters->channelCount, targetImpedanceOhms, Qt::green);
         //Draw each point
         for (int i = 0; i < impedances.size(); i++) {
             bool selected = false;
@@ -1138,8 +1139,8 @@ void MainWindow::drawAllImpedances()
     }
     else {
         //Draw gray 0 degree and - 90 degree lines
-        currentZ->plotLine(0, 0, 127, 0, Qt::darkGray);
-        currentZ->plotLine(0, -PI/2, 127, -PI/2, Qt::darkGray);
+        currentZ->plotLine(0, 0, globalParameters->channelCount - 1, 0, Qt::darkGray);
+        currentZ->plotLine(0, -PI/2, globalParameters->channelCount - 1, -PI/2, Qt::darkGray);
         for (int i = 0; i < impedances.size(); i++) {
             bool selected = false;
             if (selectedChannelSpinBox->value() == impedances[i].index)
