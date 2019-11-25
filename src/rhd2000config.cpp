@@ -170,6 +170,8 @@ namespace Rhd2000Config {
      */
     complex<double> ImpedanceFreq::calculateBestImpedanceOneAmplifier(vector<complex<double> >& measuredAmplitudes) {
         const double MAX_AMPLITUDE = 3000; // Above this, we're worried about non-linearity
+        int bestAmplitudeIndex;
+        //double saturationVoltage = approximateSaturationVoltage(actualImpedanceFreq, bandwidth.actualUpperBandwidth);
 
         double amplitude[3];
         for (int i = 0; i < 3; i++) {
@@ -177,7 +179,6 @@ namespace Rhd2000Config {
         }
 
         double currentAmplitude = 0;
-        int bestAmplitudeIndex = -1;
         for (int i = 0; i < 3; i++) {
             // Find the largest that's smaller than MAX_AMPLITUDE
             if ((amplitude[i] < MAX_AMPLITUDE) && (amplitude[i] > currentAmplitude)) {
@@ -185,6 +186,15 @@ namespace Rhd2000Config {
                 currentAmplitude = amplitude[i];
             }
         }
+
+//        // Make sure chosen capacitor is below saturation voltage
+//        if (amplitude[2] < saturationVoltage) {
+//            bestAmplitudeIndex = 2;
+//        } else if (amplitude[1] < saturationVoltage) {
+//            bestAmplitudeIndex = 1;
+//        } else {
+//            bestAmplitudeIndex = 0;
+//        }
 
         // If we didn't find one (i.e., if everything is >= MAX_AMPLITUDE)
         if (bestAmplitudeIndex == -1) {
@@ -196,6 +206,16 @@ namespace Rhd2000Config {
                 }
             }
         }
+
+//        // If C2 and C3 are too close, C3 is probably saturated. Ignore C3.
+//        double capRatio = amplitude[1] / amplitude[2];
+//        if (capRatio > 0.2) {
+//            if (bestAmplitudeIndex == 2) {
+//                bestAmplitudeIndex = 1;
+//            }
+//        }
+
+        qDebug() << "Here. best amplitude index: " << bestAmplitudeIndex;
 
         double Cseries = Rhd2000Registers::getCapacitance(static_cast<Rhd2000Registers::ZcheckCs>(bestAmplitudeIndex));
 
@@ -219,14 +239,28 @@ namespace Rhd2000Config {
         complex<double> zCorrected1 = measuredAmplitudes[bestAmplitudeIndex] * correction;
 
         // Factor out on-chip parasitic capacitance from impedance measurement.
-        const double parasiticCapacitance = 14.0e-12;  // 14 pF: an estimate of on-chip parasitic capacitance,
+        const double parasiticCapacitance = 14.0e-12;  // 15 pF: an estimate of on-chip parasitic capacitance,
         // including 10 pF of amplifier input capacitance.
         complex<double> zCorrected2 = factorOutParallelCapacitance(zCorrected1, parasiticCapacitance);
 
         // Perform empirical resistance correction to improve accuracy at sample rates below
         // 15 kS/s.
-        return empiricalResistanceCorrection(zCorrected2);
+        // NOTE: After refining the impedance measurement algorithm, Intan has determined this empirical correction is no longer necessary for accurate measurements
+        //return empiricalResistanceCorrection(zCorrected2);
+        return zCorrected2;
     }
+
+
+    // Use a 2nd order Low Pass Filter to model the approximate voltage at which the amplifiers saturate
+    // which depends on the impedance frequency and the amplifier bandwidth.
+    double ImpedanceFreq::approximateSaturationVoltage(double actualZFreq, double highCutoff)
+    {
+        if (actualZFreq < 0.2 * highCutoff)
+            return 5000.0;
+        else
+            return 5000.0 * sqrt(1.0 / (1.0 + pow(3.3333 * actualZFreq / highCutoff, 4)));
+    }
+
 
     double ImpedanceFreq::getPeriod() {
         return boardSampleRate / actualImpedanceFreq;

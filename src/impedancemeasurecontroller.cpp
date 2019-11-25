@@ -225,6 +225,7 @@ complex<double> ImpedanceMeasureController::measureOneImpedance(Rhd2000EvalBoard
 
     // And now, store the acquired data
     if (good) {
+        qDebug() << "Channel: " << channel << ": ";
         return boardControl.impedance.calculateBestImpedanceOneAmplifier(measuredAmplitudes[datasource][channel]);
     }
     else {

@@ -621,8 +621,8 @@ void MainWindow::about()
 {
     QMessageBox::about(this, tr("About Intan Technologies RHD2000 Electroplating Interface"),
             tr("<h2>Intan Technologies RHD2000 Electroplating Interface</h2>"
-               "<p>Version 1.01"
-               "<p>Copyright &copy; 2017 Intan Technologies"
+               "<p>Version 1.02"
+               "<p>Copyright &copy; 2019 Intan Technologies"
                "<p>This application controls the RHD2000 "
                "Electroplating Board from Intan Technologies.  The C++/Qt source code "
                "for this application is freely available from Intan Technologies. "

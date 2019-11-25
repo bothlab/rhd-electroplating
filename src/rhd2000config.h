@@ -70,6 +70,8 @@ namespace Rhd2000Config {
         std::complex<double> amplitudeOfFreqComponent(double* data);
         std::complex<double> calculateBestImpedanceOneAmplifier(std::vector<std::complex<double> >& measuredAmplitudes);
 
+        double approximateSaturationVoltage(double actualZFreq, double highCutoff);
+
     private:
         // Dependencies from boardControl; i.e., when these change, we need to change too
         double& boardSampleRate;
