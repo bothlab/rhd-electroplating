@@ -937,19 +937,19 @@ void MainWindow::connectToBoard()
         //Make sure USB connection is established
         QMessageBox::StandardButton r;
         if (usb_type == -1) {
-            r = QMessageBox::question(this, tr("Cannot load Opal Kelly FrontPanel DLL"),
+            r = QMessageBox::critical(this, tr("Cannot load Opal Kelly FrontPanel DLL"),
                                       tr("Opal Kelly USB drivers not installed.  "
                                          "<p>To use the Electroplating Board, load the correct Opal Kelly drivers, then restart the application."
                                          "<p>Visit http://www.intantech.com for more information."),
-                                      QMessageBox::Ok | QMessageBox::Cancel);
+                                      QMessageBox::Ok);
             return;
         }
         else if (usb_type != 1) {
-            r = QMessageBox::question(this, tr("Electroplating Board Not Found"),
+            r = QMessageBox::critical(this, tr("Electroplating Board Not Found"),
                                       tr("Intan Technologies Electroplating Board not found on any USB port.  "
                                          "<p>To use the Electroplating Board, connect the device to a USB port, then restart the application."
                                          "<p>Visit http://www.intantech.com for more information."),
-                                      QMessageBox::Ok | QMessageBox::Cancel);
+                                      QMessageBox::Ok);
             return;
         }
 
