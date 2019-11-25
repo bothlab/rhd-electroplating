@@ -1,5 +1,8 @@
 build/
 
+# Other
+*.user
+
 # Prerequisites
 *.d
 
